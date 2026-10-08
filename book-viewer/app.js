@@ -175,8 +175,97 @@ function bindNav() {
   }, { passive: true });
 }
 
-// panelAndToc 在 Task 7 实现
-function panelAndToc() { /* Task 7 */ }
+const BKS_KEY = 'bookviewer.bookmarks';
+let bookmarks = JSON.parse(localStorage.getItem(BKS_KEY) || '[]');
+
+export function toggleBookmark() {
+  const e = state.entries[state.current.flat];
+  const i = bookmarks.findIndex(b => b.entryId === e.entryId);
+  if (i >= 0) bookmarks.splice(i, 1); else bookmarks.push({ entryId: e.entryId, title: e.title, at: new Date().toISOString() });
+  saveBookmarks();
+}
+
+function saveBookmarks() {
+  localStorage.setItem(BKS_KEY, JSON.stringify(bookmarks));
+  renderBookmarks();
+}
+
+export function renderBookmarks() {
+  const ul = $('bookmarkList'); if (!ul) return;
+  ul.innerHTML = '';
+  bookmarks.slice().reverse().forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b.title;
+    const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = `第 ${b.entryId} 条`;
+    li.appendChild(sub);
+    li.onclick = () => { const fi = state.entryIndex.get(b.entryId); if (fi != null) { flipToFlat(fi); closePanel(); } };
+    ul.appendChild(li);
+  });
+}
+
+export function exportBookmarks() {
+  const blob = new Blob([JSON.stringify(bookmarks, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'bookmarks.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+export function importBookmarksFile(file) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const arr = JSON.parse(rd.result);
+      if (!Array.isArray(arr)) throw 0;
+      bookmarks = arr.filter(b => b && typeof b.entryId === 'string');
+      saveBookmarks();
+      alert('已导入 ' + bookmarks.length + ' 条书签');
+    } catch { alert('导入文件格式不对'); }
+  };
+  rd.readAsText(file);
+}
+
+export function panelAndToc() {
+  const sec = sectionOf(state.current.flat);
+  const t = $('toc'); if (!t) return;
+  t.innerHTML = state.corpus.sections.map(s => {
+    const cur = s.sectionId === sec.sectionId ? ' toc-current' : '';
+    const inner = cur ? s.entries.map((e, i) => `<span class="sub">${s.start + i === state.current.flat ? '▶ ' : ''}第 ${e.num} 条 ${e.title}</span>`).join('') : '';
+    return `<div class="toc-item${cur}" data-sec="${s.sectionId}">${s.title}${inner}</div>`;
+  }).join('');
+  t.querySelectorAll('.toc-item').forEach(n => n.onclick = () => {
+    const secId = n.dataset.sec;
+    if (secId === sec.sectionId) return;
+    const targetSection = state.corpus.sections.find(x => x.sectionId === secId);
+    flipToFlat(state.entryIndex.get(targetSection.entries[0].entryId));
+    closePanel();
+  });
+  renderProgress(sec);
+  renderBookmarks();
+}
+
+function renderProgress(sec) {
+  const total = state.entries.length;
+  const g = state.current.flat / Math.max(1, total - 1);
+  $('globalProgress').innerHTML = `<div>全书已读到 ${(g * 100).toFixed(1)}%</div><div class="bar"><div class="fill" style="width:${(g * 100).toFixed(1)}%"></div></div>`;
+  const s = sec.entries.length ? (state.current.flat - sec.start) / sec.entries.length : 0;
+  $('sectionProgress').innerHTML = `<div>本节 ${sec.title}：${(s * 100).toFixed(0)}%</div><div class="bar"><div class="fill" style="width:${(s * 100).toFixed(0)}%"></div></div>`;
+}
+
+export function openPanel() { $('panel').hidden = false; panelAndToc(); }
+export function closePanel() { $('panel').hidden = true; }
+
+function bindPanel() {
+  $('openPanel').onclick = openPanel;
+  $('closePanel').onclick = closePanel;
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
+    ['toc', 'bookmark', 'progress'].forEach(n => $(n).hidden = n !== b.dataset.tab);
+  });
+  $('addBookmark').onclick = toggleBookmark;
+  $('exportBookmarks').onclick = exportBookmarks;
+  $('importBookmarks').onclick = () => $('importFile').click();
+  $('importFile').onchange = () => { importBookmarksFile($('importFile').files[0]); $('importFile').value = ''; };
+}
 
 const LS_READ = 'bookviewer.readentry';
 export function hasHashIndex() { return /^#entry-/.test(location.hash); }
@@ -196,6 +285,8 @@ async function boot() {
     if (!hasHashIndex()) loadProgress();
     refreshPgbar();
     bindNav();
+    bindPanel();
+    panelAndToc();
   } catch (err) {
     document.body.innerHTML = `<div style="padding:40px;color:#fff">加载失败：${escapeHtml(err.message)}。请确认已联网且服务端在 /book-viewer/ 下。</div>`;
   }
