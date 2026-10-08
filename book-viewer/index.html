@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高性价比人生指南 · 书页版</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="desk">
+  <div id="book">
+    <div id="spine-top"></div>
+    <div id="stage">
+      <article class="sheet" id="front" data-side="front"></article>
+      <article class="sheet" id="turning" data-side="turning"></article>
+      <article class="sheet" id="back" data-side="back"></article>
+    </div>
+  </div>
+  <button id="openPanel" aria-label="打开面板">☰</button>
+  <div id="pgbar"><span id="pgtext"></span></div>
+</div>
+<div id="ruler" aria-hidden="true"></div>
+<aside id="panel" aria-label="面板" hidden>
+  <header>
+    <span id="panelTitle">面板</span>
+    <button id="closePanel">×</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-tab="toc">目录</button>
+    <button class="tab" data-tab="bookmark">书签</button>
+    <button class="tab" data-tab="progress">进度</button>
+  </nav>
+  <div id="toc" class="tabpane"></div>
+  <div id="bookmark" class="tabpane">
+    <button id="addBookmark">加当前条目为书签</button>
+    <button id="exportBookmarks">导出书签</button>
+    <button id="importBookmarks">导入书签</button>
+    <input id="importFile" type="file" accept=".json" hidden>
+    <ul id="bookmarkList"></ul>
+  </div>
+  <div id="progress" class="tabpane">
+    <div id="globalProgress"></div>
+    <div id="sectionProgress"></div>
+  </div>
+</aside>
+<script type="module" src="app.js"></script>
+</body>
+</html>
