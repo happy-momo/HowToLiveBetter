@@ -110,10 +110,80 @@ export function reflow() {
   refreshPgbar();
 }
 
+export function flipToPage(pid) {
+  if (busy || pid < 0 || pid >= state.pages.length) return;
+  const cur = pageIdOfCurrent();
+  if (pid === cur) return;
+  busy = true;
+  const dir = pid > cur ? 1 : -1;
+  const targetFlat = state.pages[pid].topEntry;
+
+  if (dir > 0) {
+    // 向后翻：当前页作为 turning 掀开，露出 back（已预渲染为 pid）
+    if (Number($('back').dataset.page) !== pid) renderPage($('back'), pid);
+    turning.innerHTML = front.innerHTML;
+    turning.className = 'sheet flipping';
+    turning.style.transform = '';
+  } else {
+    // 向前翻：把目标页放到 turning，从上方翻下覆盖当前页
+    turning.innerHTML = `
+      <div class="paper">${renderPageHTML(pid)}<div class="curl"></div></div>`;
+    turning.className = 'sheet flipping-back';
+    turning.style.transform = 'rotateX(-178deg) translateZ(2px)';
+  }
+
+  function finish() {
+    front.innerHTML = turning.innerHTML;
+    front.dataset.page = pid;
+    turning.className = 'sheet';
+    turning.style.transform = '';
+    turning.innerHTML = '';
+    state.current.flat = targetFlat;
+    updateHash(); refreshPgbar(); saveProgress(); panelAndToc();
+    busy = false;
+  }
+
+  turning.addEventListener('animationend', finish, { once: true });
+}
+
+export function flipDir(dir) { flipToPage(pageIdOfCurrent() + dir); }
+export function flipToFlat(flatIndex) {
+  const pid = state.pageOfEntry.get(flatIndex);
+  if (pid == null) return;
+  if (pid === pageIdOfCurrent()) { state.current.flat = flatIndex; updateHash(); saveProgress(); panelAndToc(); return; }
+  flipToPage(pid);
+}
+
+export function updateHash() {
+  const e = state.entries[state.current.flat];
+  history.replaceState(null, '', `#entry-${e.entryId}`);
+}
+
+function bindNav() {
+  document.addEventListener('keydown', ev => {
+    if (ev.target.closest && ev.target.closest('#panel')) return;
+    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown' || ev.key === 'PageDown') flipDir(1);
+    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp' || ev.key === 'PageUp') flipDir(-1);
+  });
+  let touchY = null;
+  document.addEventListener('touchstart', ev => { if (ev.target.closest && ev.target.closest('#panel')) return; touchY = ev.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', ev => {
+    if (touchY == null) return;
+    const dy = ev.changedTouches[0].clientY - touchY;
+    if (Math.abs(dy) > 70) flipDir(dy < 0 ? 1 : -1);
+    touchY = null;
+  }, { passive: true });
+}
+
+// 这些函数在后续 Task 6/7 中实现；先占位供当前代码引用。
+function saveProgress() { /* Task 6 */ }
+function panelAndToc() { /* Task 7 */ }
+
 async function boot() {
   try {
     await load();
     refreshPgbar();
+    bindNav();
   } catch (err) {
     document.body.innerHTML = `<div style="padding:40px;color:#fff">加载失败：${escapeHtml(err.message)}。请确认已联网且服务端在 /book-viewer/ 下。</div>`;
   }
