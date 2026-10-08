@@ -175,13 +175,25 @@ function bindNav() {
   }, { passive: true });
 }
 
-// 这些函数在后续 Task 6/7 中实现；先占位供当前代码引用。
-function saveProgress() { /* Task 6 */ }
+// panelAndToc 在 Task 7 实现
 function panelAndToc() { /* Task 7 */ }
+
+const LS_READ = 'bookviewer.readentry';
+export function hasHashIndex() { return /^#entry-/.test(location.hash); }
+export function loadProgress() {
+  const id = localStorage.getItem(LS_READ);
+  if (!id) return;
+  const fi = state.entryIndex.get(id);
+  if (fi != null) state.current.flat = fi;
+}
+export function saveProgress() {
+  localStorage.setItem(LS_READ, state.entries[state.current.flat].entryId);
+}
 
 async function boot() {
   try {
     await load();
+    if (!hasHashIndex()) loadProgress();
     refreshPgbar();
     bindNav();
   } catch (err) {
