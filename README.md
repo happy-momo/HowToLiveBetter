@@ -30,7 +30,7 @@ AI 助手 skill 支持 Claude Code 和 Codex。装上后直接问「替朋友担
 </td></tr>
 <tr><td align="right"><b>查阅</b></td><td align="left">
 
-[目录](#目录) · [术语表](#读懂数字术语表) · [核实记录](docs/核实记录/)
+[目录](#目录) · [术语表](#读懂数字术语表) · [核实记录](docs/核实记录/) · [书页版（顶边翻页）](book-viewer/)
 
 </td></tr>
 <tr><td align="right"><b>长文</b></td><td align="left">
