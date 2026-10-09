@@ -39,11 +39,15 @@ export function buildFlat() {
 }
 
 // 测量每条净高。标尺宽度 = 页片内容宽（clientWidth - 横padding），否则换行宽度错误。
+// 每条净高只取决于内容宽度，宽度不变就复用上次结果，避免每次重排都做几百次 DOM 测量。
+let measureW = 0, measureH = null;
 export function measureEntries() {
   const ruler = $('ruler');
   const front = $('front');
   const ps = getComputedStyle(front);
-  ruler.style.width = (front.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight)) + 'px';
+  const w = front.clientWidth;
+  if (measureH && measureW === w) return measureH;
+  ruler.style.width = (w - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight)) + 'px';
   const heights = [];
   for (const e of state.entries) {
     const d = document.createElement('div');
@@ -53,6 +57,7 @@ export function measureEntries() {
     heights.push(d.offsetHeight);
     d.remove();
   }
+  measureW = w; measureH = heights;
   return heights;
 }
 
@@ -126,7 +131,7 @@ export function flipToPage(pid, { animate = true } = {}) {
     renderPage(front, pid);
     state.current.flat = targetFlat;
     updateHash(); refreshPgbar(); saveProgress();
-    if (!$('panel').hidden) panelAndToc();
+    if (!$('panel').hidden) refreshPanelPosition();
     busy = false;
     return;
   }
@@ -154,7 +159,7 @@ export function flipToPage(pid, { animate = true } = {}) {
     turning.innerHTML = '';
     state.current.flat = targetFlat;
     updateHash(); refreshPgbar(); saveProgress();
-    if (!$('panel').hidden) panelAndToc();
+    if (!$('panel').hidden) refreshPanelPosition();
     busy = false;
   }
 
@@ -168,7 +173,7 @@ export function flipToFlat(flatIndex, { animate = true } = {}) {
   if (pid === pageIdOfCurrent()) {
     state.current.flat = flatIndex;
     updateHash(); refreshPgbar(); saveProgress();
-    if (!$('panel').hidden) panelAndToc();
+    if (!$('panel').hidden) refreshPanelPosition();
     return;
   }
   flipToPage(pid, { animate });
@@ -242,6 +247,25 @@ export function importBookmarksFile(file) {
     } catch { alert('导入文件格式不对'); }
   };
   rd.readAsText(file);
+}
+
+// 轻量刷新：翻页/跳转时只挪当前节高亮与 ▶ 标记、更新进度条，
+// 不整棵重建目录和书签，避免每翻一页都重解析 34 节 DOM。
+function refreshPanelPosition() {
+  if ($('panel').hidden) return;
+  const curSecId = sectionOf(state.current.flat).sectionId;
+  const t = $('toc'); if (!t) return;
+  t.querySelectorAll('.toc-item').forEach(n => {
+    const sec = state.sections.find(s => s.sectionId === n.dataset.sec);
+    if (!sec) return;
+    const isCur = sec.sectionId === curSecId;
+    n.classList.toggle('toc-current', isCur);
+    const inner = isCur ? sec.entries.map((e, i) =>
+      `<span class="sub">${sec.start + i === state.current.flat ? '▶ ' : ''}第 ${e.num} 条 ${e.title}</span>`).join('') : '';
+    n.innerHTML = `${sec.title}${inner}`; // onclick 绑在 n 自身，换内层不丢
+  });
+  const cur = state.sections.find(s => s.sectionId === curSecId);
+  renderProgress(cur ?? state.sections[0]);
 }
 
 export function panelAndToc() {
