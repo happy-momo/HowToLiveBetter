@@ -28,8 +28,8 @@ body { font-family: "Noto Serif SC", "Songti SC", serif; color: #26221d; overflo
 
 .sheet .paper { position: relative; min-height: 100%; }
 .sheet .curl { position: absolute; inset: 0; pointer-events: none; opacity: 0; background:
-  repeating-linear-gradient(0deg, rgba(0,0,0,.04) 0 2px, transparent 2px 6px); mix-blend-mode: multiply; }
-@keyframes curlSweep { 0% { opacity: 0; } 35% { opacity: .5; } 60% { opacity: .15; } 100% { opacity: 0; } }
+  linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.04) 40%, transparent 70%); }
+@keyframes curlSweep { 0% { opacity: 0; } 35% { opacity: .35; } 60% { opacity: .08; } 100% { opacity: 0; } }
 .sheet.flipping .curl { animation: curlSweep .9s ease forwards; }
 
 .entry { margin-bottom: 22px; break-inside: avoid; }
