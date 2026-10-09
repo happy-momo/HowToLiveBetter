@@ -24,9 +24,12 @@ body { font-family: "Noto Serif SC", "Songti SC", serif; color: #26221d; overflo
 .sheet::-webkit-scrollbar { width: 6px; }
 .sheet::-webkit-scrollbar-thumb { background: #c9bfa8; border-radius: 3px; }
 
-#front { z-index: 3; }
-#back { z-index: 1; transform: translateZ(-2px); box-shadow: 0 12px 24px rgba(0,0,0,.35); }
-#turning { z-index: 2; pointer-events: none; }
+/* 三张片按 DOM 顺序自然堆叠：back(最底) < front(中间) < turning(最顶)。
+   平时只有 front 可见，back 和 turning 在翻页动画时才短暂显示。
+   用 visibility 而不是 z-index 控制，避免 3D transform 下 z-index 排序不可靠。 */
+#front { }
+#back { visibility: hidden; }
+#turning { visibility: hidden; pointer-events: none; }
 
 .sheet .paper { position: relative; min-height: 100%; }
 .sheet .curl { position: absolute; inset: 0; pointer-events: none; opacity: 0; background:

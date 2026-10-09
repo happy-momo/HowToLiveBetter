@@ -137,37 +137,36 @@ export function flipToPage(pid, { animate = true } = {}) {
   }
 
   if (dir > 0) {
-    // 向后翻：当前页作为 turning 从左边缘卷起离开，露出 back 里的新页。
+    // 向前翻（下一页）：back 显示新页、turning 装旧页翻走、front 藏起来。
+    // 用 visibility 而不是 z-index 控制：3D transform + preserve-3d 下 z-index 不靠谱，
+    // 浏览器按 3D 空间深度排序，翻卷的页面会”退到远处”被底下的新页盖住，
+    // 看起来就是”先显示上一页、突然刷成下一页”。
     if (Number(back.dataset.page) !== pid) renderPage(back, pid);
+    back.style.visibility = 'visible';
     turning.innerHTML = front.innerHTML;
     turning.className = 'sheet flipping';
     turning.style.transform = '';
-    // 层级：卷起的 turning 最上层、新页 back 其次、把不透明的旧 front 压到底，
-    // 否则旧页会把 back 挡在下面，翻完才“突然”换页。
-    front.style.zIndex = '0';
-    back.style.zIndex = '4';
-    turning.style.zIndex = '5';
+    turning.style.visibility = 'visible';
+    front.style.visibility = 'hidden';
   } else {
-    // 向前翻：把目标页放到 turning，从左侧卷上来盖住当前页。
+    // 向后翻（上一页）：turning 装新页从左侧卷回来、front 保持旧页在下层、back 藏着。
     turning.innerHTML = `
-      <div class="paper">${renderPageHTML(pid)}<div class="curl"></div></div>`;
+      <div class=”paper”>${renderPageHTML(pid)}<div class=”curl”></div></div>`;
     turning.className = 'sheet flipping-back';
     turning.style.transform = 'rotateY(-178deg) translateZ(2px)';
-    // 卷入的新页放最上层盖住当前 front，back 压下去不用。
-    back.style.zIndex = '0';
-    turning.style.zIndex = '5';
+    turning.style.visibility = 'visible';
+    back.style.visibility = 'hidden';
   }
 
   function finish() {
-    // forward：露出的是 back（新页）；backward：turning 里就是新页
+    // 翻完把 front 换成新页、显示回来，其余两层复位并藏起来。
     front.innerHTML = dir > 0 ? back.innerHTML : turning.innerHTML;
     front.dataset.page = pid;
-    // 还原层级到样式默认值（front 3 / back 1 / turning 2）
-    front.style.zIndex = '';
-    back.style.zIndex = '';
-    turning.style.zIndex = '';
+    front.style.visibility = 'visible';
+    back.style.visibility = 'hidden';
     turning.className = 'sheet';
     turning.style.transform = '';
+    turning.style.visibility = 'hidden';
     turning.innerHTML = '';
     state.current.flat = targetFlat;
     updateHash(); refreshPgbar(); saveProgress();
