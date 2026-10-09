@@ -15,6 +15,9 @@ export function renderEntryHTML(e) {
 function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 export const state = { corpus: null, sections: [], entries: [], entryIndex: null, pages: [], pageOfEntry: null, current: { flat: 0 } };
+let busy = false; // 翻页动画进行中，锁住后续翻页调用，避免重入
+// 三个页片引用：app.js 是 ES 模块（严格模式），裸标识符不声明会抛 ReferenceError。
+const front = $('front'), back = $('back'), turning = $('turning');
 
 function sectionOf(flat) { for (const s of state.sections) if (flat < s.end) return s; return state.sections[0]; }
 
