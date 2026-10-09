@@ -190,13 +190,14 @@ function bindNav() {
     if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown' || ev.key === 'PageDown') flipDir(1);
     else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp' || ev.key === 'PageUp') flipDir(-1);
   });
-  let touchY = null;
-  document.addEventListener('touchstart', ev => { if (ev.target.closest && ev.target.closest('#panel')) return; touchY = ev.touches[0].clientY; }, { passive: true });
+  // 左右横滑翻页：左滑（dx<0）下一页、右滑（dx>0）上一页。竖滑留给页内滚动。
+  let touchX = null;
+  document.addEventListener('touchstart', ev => { if (ev.target.closest && ev.target.closest('#panel')) return; touchX = ev.touches[0].clientX; }, { passive: true });
   document.addEventListener('touchend', ev => {
-    if (touchY == null) return;
-    const dy = ev.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) flipDir(dy < 0 ? 1 : -1);
-    touchY = null;
+    if (touchX == null) return;
+    const dx = ev.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 70) flipDir(dx < 0 ? 1 : -1);
+    touchX = null;
   }, { passive: true });
 }
 
@@ -309,6 +310,8 @@ function bindPanel() {
   $('exportBookmarks').onclick = exportBookmarks;
   $('importBookmarks').onclick = () => $('importFile').click();
   $('importFile').onchange = () => { importBookmarksFile($('importFile').files[0]); $('importFile').value = ''; };
+  $('btnPrev').onclick = () => flipDir(-1);
+  $('btnNext').onclick = () => flipDir(1);
 }
 
 const LS_READ = 'bookviewer.readentry';
