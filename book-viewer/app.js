@@ -137,23 +137,35 @@ export function flipToPage(pid, { animate = true } = {}) {
   }
 
   if (dir > 0) {
-    // 向后翻：当前页作为 turning 掀开，露出 back（已预渲染为 pid）
+    // 向后翻：当前页作为 turning 从左边缘卷起离开，露出 back 里的新页。
     if (Number(back.dataset.page) !== pid) renderPage(back, pid);
     turning.innerHTML = front.innerHTML;
     turning.className = 'sheet flipping';
     turning.style.transform = '';
+    // 层级：卷起的 turning 最上层、新页 back 其次、把不透明的旧 front 压到底，
+    // 否则旧页会把 back 挡在下面，翻完才“突然”换页。
+    front.style.zIndex = '0';
+    back.style.zIndex = '4';
+    turning.style.zIndex = '5';
   } else {
-    // 向前翻：把目标页放到 turning，从上方翻下覆盖当前页
+    // 向前翻：把目标页放到 turning，从左侧卷上来盖住当前页。
     turning.innerHTML = `
       <div class="paper">${renderPageHTML(pid)}<div class="curl"></div></div>`;
     turning.className = 'sheet flipping-back';
-    turning.style.transform = 'rotateX(-178deg) translateZ(2px)';
+    turning.style.transform = 'rotateY(-178deg) translateZ(2px)';
+    // 卷入的新页放最上层盖住当前 front，back 压下去不用。
+    back.style.zIndex = '0';
+    turning.style.zIndex = '5';
   }
 
   function finish() {
     // forward：露出的是 back（新页）；backward：turning 里就是新页
     front.innerHTML = dir > 0 ? back.innerHTML : turning.innerHTML;
     front.dataset.page = pid;
+    // 还原层级到样式默认值（front 3 / back 1 / turning 2）
+    front.style.zIndex = '';
+    back.style.zIndex = '';
+    turning.style.zIndex = '';
     turning.className = 'sheet';
     turning.style.transform = '';
     turning.innerHTML = '';
