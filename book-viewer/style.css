@@ -43,11 +43,6 @@ body { font-family: "Noto Serif SC", "Songti SC", serif; color: #26221d; overflo
 
 #openPanel { position: fixed; left: 12px; top: 50%; transform: translateY(-50%); z-index: 20; width: 52px; height: 52px; border-radius: 50%; border: 0; background: #b0493a; color: #fff; font-size: 26px; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
 #pgbar { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.55); color: #fdf8ef; padding: 4px 14px; border-radius: 20px; font-size: 13px; letter-spacing: .04em; z-index: 15; }
-/* 手机端左右翻页箭头：桌面隐藏，避免和左上角的菜单按钮叠一起 */
-.edgebtn { position: fixed; top: 50%; transform: translateY(-50%); z-index: 12; display: none; width: 46px; height: 96px; border: 0; background: transparent; color: #fff; font-size: 44px; line-height: 1; opacity: .5; cursor: pointer; touch-action: manipulation; }
-.edgebtn:active { opacity: .95; }
-#btnPrev { left: 0; }
-#btnNext { right: 0; }
 
 #panel { position: fixed; top: 0; bottom: 0; left: 0; width: 340px; max-width: 88vw; z-index: 30; background: #f7f1e6;
   border-right: 1px solid #d8cbb4; box-shadow: 8px 0 28px rgba(0,0,0,.35); display: flex; flex-direction: column; transition: transform .25s ease; }
@@ -76,7 +71,6 @@ body { font-family: "Noto Serif SC", "Songti SC", serif; color: #26221d; overflo
   .entry h3 { font-size: 19px; }
   .entry p { font-size: 16px; }
   #openPanel { top: auto; bottom: 84px; left: 10px; transform: none; }
-  #btnPrev, #btnNext { display: block; }
   #panel { width: 100%; max-width: 100vw; border-right: 0; }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -310,8 +310,6 @@ function bindPanel() {
   $('exportBookmarks').onclick = exportBookmarks;
   $('importBookmarks').onclick = () => $('importFile').click();
   $('importFile').onchange = () => { importBookmarksFile($('importFile').files[0]); $('importFile').value = ''; };
-  $('btnPrev').onclick = () => flipDir(-1);
-  $('btnNext').onclick = () => flipDir(1);
 }
 
 const LS_READ = 'bookviewer.readentry';
